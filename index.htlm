@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>TP interactif — Matrice d’Eisenhower</title>
+  <style>
+    body {font-family: Arial, sans-serif; margin:20px; background:#f9f9f9;}
+    h2 {color:#1f4e79;}
+    .container {display:flex; gap:30px;}
+    .tasks, .matrix {padding:10px;}
+    .tasks div {background:#1f4e79;color:#fff;padding:10px;margin:8px 0;border-radius:8px;cursor:grab;}
+    .matrix {display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;}
+    .dropzone {min-height:120px;border:2px dashed #ccc;border-radius:8px;padding:10px;text-align:center;background:#fff;}
+    .dropzone h3 {margin-top:0;color:#333;font-size:16px;}
+    .buttons {margin-top:20px;}
+    button {padding:10px 15px;margin-right:10px;border:none;border-radius:6px;cursor:pointer;}
+    button.verify {background:#1f4e79;color:#fff;}
+    button.reset {background:#aaa;color:#fff;}
+    #result {margin-top:15px;font-weight:bold;}
+  </style>
+</head>
+<body>
+
+  <h2>TP interactif — Place chaque tâche dans la bonne case</h2>
+  <p>Glisse-dépose chaque vignette dans la case de la matrice. Ensuite, clique sur <em>Vérifier</em>.</p>
+
+  <div class="container">
+    <div class="tasks" id="tasks">
+      <div draggable="true" data-answer="urgent-important">Imprimante bloquée 5 min avant une séance</div>
+      <div draggable="true" data-answer="urgent-important">Visiteur arrivé pour un rendez-vous maintenant</div>
+      <div draggable="true" data-answer="important">Préparer l’affichage des salles pour demain</div>
+      <div draggable="true" data-answer="important">Mettre à jour l’annuaire interne</div>
+      <div draggable="true" data-answer="urgent">Transférer un appel générique au service concerné</div>
+      <div draggable="true" data-answer="urgent">Signer la réception d’un colis non prioritaire</div>
+      <div draggable="true" data-answer="pas-important">Trier des documents non utiles</div>
+      <div draggable="true" data-answer="pas-important">Lire une newsletter commerciale</div>
+    </div>
+
+    <div class="matrix">
+      <div class="dropzone" data-zone="urgent-important"><h3>Urgent & Important<br><small>Je fais</small></h3></div>
+      <div class="dropzone" data-zone="important"><h3>Important & Pas urgent<br><small>Je planifie</small></h3></div>
+      <div class="dropzone" data-zone="urgent"><h3>Urgent & Pas important<br><small>Je délègue</small></h3></div>
+      <div class="dropzone" data-zone="pas-important"><h3>Pas urgent & Pas important<br><small>J’élimine</small></h3></div>
+    </div>
+  </div>
+
+  <div class="buttons">
+    <button class="verify" onclick="verify()">Vérifier</button>
+    <button class="reset" onclick="reset()">Réinitialiser</button>
+  </div>
+
+  <div id="result"></div>
+
+<script>
+  const tasks = document.querySelectorAll('.tasks div');
+  const zones = document.querySelectorAll('.dropzone');
+
+  tasks.forEach(task => {
+    task.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', task.dataset.answer + '::' + task.innerText);
+    });
+  });
+
+  zones.forEach(zone => {
+    zone.addEventListener('dragover', e => e.preventDefault());
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      const data = e.dataTransfer.getData('text/plain').split('::');
+      const task = document.createElement('div');
+      task.innerText = data[1];
+      task.className = "dropped";
+      task.dataset.answer = data[0];
+      zone.appendChild(task);
+    });
+  });
+
+  function verify(){
+    let good = 0, total = 0;
+    zones.forEach(zone => {
+      const children = zone.querySelectorAll('.dropped');
+      children.forEach(child => {
+        total++;
+        if(child.dataset.answer === zone.dataset.zone){
+          good++;
+        }
+      });
+    });
+    document.getElementById('result').innerText =
+      good === total ? "✅ Bravo, tout est bien classé !" : "❌ Il reste des erreurs, recommencez.";
+  }
+
+  function reset(){
+    document.getElementById('tasks').innerHTML = `
+      <div draggable="true" data-answer="urgent-important">Imprimante bloquée 5 min avant une séance</div>
+      <div draggable="true" data-answer="urgent-important">Visiteur arrivé pour un rendez-vous maintenant</div>
+      <div draggable="true" data-answer="important">Préparer l’affichage des salles pour demain</div>
+      <div draggable="true" data-answer="important">Mettre à jour l’annuaire interne</div>
+      <div draggable="true" data-answer="urgent">Transférer un appel générique au service concerné</div>
+      <div draggable="true" data-answer="urgent">Signer la réception d’un colis non prioritaire</div>
+      <div draggable="true" data-answer="pas-important">Trier des documents non utiles</div>
+      <div draggable="true" data-answer="pas-important">Lire une newsletter commerciale</div>`;
+    document.getElementById('result').innerText = "";
+    document.querySelectorAll('.dropzone').forEach(z => z.innerHTML = "<h3>" + z.querySelector("h3").innerHTML + "</h3>");
+    // Recharge les events
+    document.querySelectorAll('#tasks div').forEach(task => {
+      task.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', task.dataset.answer + '::' + task.innerText);
+      });
+    });
+  }
+</script>
+</body>
+</html>
